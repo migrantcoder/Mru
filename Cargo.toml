@@ -1,0 +1,25 @@
+[package]
+
+name = "mru"
+version = "0.0.1"
+authors =  ["Migrant Coder info@migrantcoder.org"]
+
+
+[profile.dev]
+
+debug = true
+
+[profile.release]
+
+debug = true
+opt-level = 1
+
+[[bin]]
+
+name = "test-stack"
+path = "src/tst/stack.rs"
+
+[[bin]]
+
+name = "test-queue"
+path = "src/tst/queue.rs"

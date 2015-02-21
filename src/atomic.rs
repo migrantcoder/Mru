@@ -2,8 +2,9 @@ use std::boxed;
 use std::boxed::Box;
 use std::mem;
 use std::num::ToPrimitive;
-use std::ops::Deref;
+use std::ops::{ Deref, DerefMut };
 use std::sync::atomic::{ AtomicPtr, Ordering };
+
 
 /// A non-owning pointer type that supports tagging and atomic compare and set.
 pub struct TaggedPtr<T> {
@@ -12,17 +13,13 @@ pub struct TaggedPtr<T> {
 
 impl<T> TaggedPtr<T> {
   pub fn nil() -> TaggedPtr<T> {
-    unsafe {
-      TaggedPtr {ptr: AtomicPtr::new(mem::transmute(0x0u64)) }
-    }
+    unsafe { TaggedPtr {ptr: AtomicPtr::new(mem::transmute(0x0u64)) } }
   }  
 
   /// Set to the pointer to box's object.  The box is consumed so the object
   /// must be manually destroyed or re-boxed.
   pub fn from_box(b: Box<T>) -> TaggedPtr<T> {
-    unsafe {
-      TaggedPtr {ptr: AtomicPtr::new(boxed::into_raw(b)) }
-    }
+    unsafe { TaggedPtr {ptr: AtomicPtr::new(boxed::into_raw(b)) } }
   }
 
   /// Create from raw pointer.
@@ -42,9 +39,7 @@ impl<T> TaggedPtr<T> {
   }
 
   pub fn is_nil(&self) -> bool {
-    unsafe {
-      mem::transmute(self.get()) == 0u64
-    }
+    unsafe { mem::transmute(self.get()) == 0u64 }
   }
 
   /// Set the value.
@@ -61,6 +56,10 @@ impl<T> TaggedPtr<T> {
     }
   }
 
+  pub fn to_u64(&self) -> u64 {
+    unsafe { mem::transmute(self.value()) }
+  }
+
   /// Return the tag value.
   pub fn get_tag(&self) -> u16 {
     unsafe {
@@ -71,7 +70,7 @@ impl<T> TaggedPtr<T> {
   }
 
   /// Set the tag value.
-  pub fn set_tag(&self, tag: u16) {
+  pub fn set_tag(&mut self, tag: u16) {
     unsafe {
       let u64ptr: u64 = mem::transmute(self.get());
       let tagged = u64ptr | (tag.to_u64().unwrap() << 48);
@@ -84,14 +83,15 @@ impl<T> TaggedPtr<T> {
     self.ptr.load(Ordering::Relaxed)
   }
 
-  pub fn increment_tag(&self) {
-    self.set_tag(self.get_tag() + 1);
+  pub fn increment_tag(&mut self) {
+    let tag = self.get_tag();
+    self.set_tag(tag + 1);
   }
 
   /// Atomically and with sequentially consistent memory ordering, compare this
   /// to expected and if equal set this to desired. 
   pub fn compare_and_set(
-      &self,
+      &mut self,
       expected: &TaggedPtr<T>,
       desired: &TaggedPtr<T>) -> bool {
     let expected_value = expected.value();
@@ -103,11 +103,26 @@ impl<T> TaggedPtr<T> {
   }
 }
 
+impl<T> Eq for TaggedPtr<T> {
+}
+
+impl<T> PartialEq for TaggedPtr<T> {
+  fn eq(&self, rhs: &Self) -> bool {
+    self.ptr.load(Ordering::Relaxed) == rhs.ptr.load(Ordering::Relaxed)
+  }
+}
+
 impl<T> Deref for TaggedPtr<T> {
   type Target = T;
 
   fn deref<'a>(&'a self) -> &'a T {
     unsafe { &*self.get() }
+  }
+}
+
+impl<T> DerefMut for TaggedPtr<T> {
+  fn deref_mut<'a>(&'a mut self) -> &'a mut T {
+    unsafe { & mut *self.get() }
   }
 }
 
