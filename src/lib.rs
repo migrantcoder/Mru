@@ -1,5 +1,5 @@
-/// Copyright (c) Migrant Coder, 2015
-/// All rights reserved.
+// Copyright (c) Migrant Coder, 2015
+// All rights reserved.
 
 #![feature(alloc)]
 #![feature(core)]
