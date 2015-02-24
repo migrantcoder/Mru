@@ -1,3 +1,6 @@
+/// Copyright (c) Migrant Coder, 2015
+/// All rights reserved.
+
 use atomic::TaggedPtr;
 use lockfree::node::Node;
 

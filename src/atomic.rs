@@ -1,3 +1,6 @@
+/// Copyright (c) Migrant Coder, 2015
+/// All rights reserved.
+
 use std::boxed;
 use std::boxed::Box;
 use std::mem;
@@ -14,7 +17,7 @@ pub struct TaggedPtr<T> {
 impl<T> TaggedPtr<T> {
   pub fn nil() -> TaggedPtr<T> {
     unsafe { TaggedPtr {ptr: AtomicPtr::new(mem::transmute(0x0u64)) } }
-  }  
+  }
 
   /// Set to the pointer to box's object.  The box is consumed so the object
   /// must be manually destroyed or re-boxed.
